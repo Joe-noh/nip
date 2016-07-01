@@ -32,9 +32,17 @@ $('#submit-button').on('click', () => {
   let body = $('textarea[name=body]').val();
 
   channel.push("nippo:create", {name, body})
-    .receive("ok", resp => { console.log("created", resp) });
+    .receive("ok", resp => { console.log("nippo created", resp) });
 });
 
+let synthes = new SpeechSynthesisUtterance();
+synthes.lang = "ja-JP"
+
 channel.on("nippo:new", message => {
-  console.log(message);
+  let {name, body} = message;
+
+  let text = `${name}さんの日報です。${body}`;
+
+  synthes.text = text;
+  speechSynthesis.speak( synthes );
 })
