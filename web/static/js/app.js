@@ -19,10 +19,20 @@ import "phoenix_html"
 // paths "./socket" or full ones "web/static/js/socket".
 
 import socket from "./socket"
-
+import $ from 'jquery'
 
 // Now that you are connected, you can join channels with a topic:
 let channel = socket.channel("rooms:nippo", {})
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
   .receive("error", resp => { console.log("Unable to join", resp) })
+
+$('#submit-button').on('click', () => {
+  let name = $('input[name=nickname]').val();
+  let body = $('textarea[name=body]').val();
+
+  channel.push("nippo:create", {name, body})
+    .receive("ok", resp => { console.log("created", resp) });
+});
+
+channel.on("nippo:submitted")
