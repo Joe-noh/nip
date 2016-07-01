@@ -5,8 +5,8 @@ defmodule Nip.RoomChannel do
     {:ok, socket}
   end
 
-  def handle_in("nippo:create", %{"name" => name, "body" => body}, socket) do
-    IO.inspect body
+  def handle_in("nippo:create", message, socket) do
+    broadcast_from socket, "nippo:new", message
 
     {:reply, :ok, socket}
   end

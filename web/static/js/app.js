@@ -35,4 +35,6 @@ $('#submit-button').on('click', () => {
     .receive("ok", resp => { console.log("created", resp) });
 });
 
-channel.on("nippo:submitted")
+channel.on("nippo:new", message => {
+  console.log(message);
+})
