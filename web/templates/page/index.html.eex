@@ -1,9 +1,1 @@
-<form>
-  <label for="nickname">あだ名</label>
-  <input type="text" name="nickname">
-
-  <label for="body">今日はどんな1日でしたか</label>
-  <textarea name="body"></textarea>
-
-  <input id="submit-button" type="button" value="ほぞん">
-</form>
+<div id="app"></div>
