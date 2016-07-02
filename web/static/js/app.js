@@ -1,48 +1,79 @@
-// Brunch automatically concatenates all files in your
-// watched paths. Those paths can be configured at
-// config.paths.watched in "brunch-config.js".
-//
-// However, those files will only be executed if
-// explicitly imported. The only exception are files
-// in vendor, which are never wrapped in imports and
-// therefore are always executed.
-
-// Import dependencies
-//
-// If you no longer want to use a dependency, remember
-// to also remove its path from "config.paths.watched".
 import "phoenix_html"
 
-// Import local files
-//
-// Local files can be imported directly using relative
-// paths "./socket" or full ones "web/static/js/socket".
+import socket from "./socket";
+import m from 'mithril';
 
-import socket from "./socket"
-import $ from 'jquery'
+class NippoChannel {
+  constructor() {
+    this.channel = socket.channel("rooms:nippo", {});
 
-// Now that you are connected, you can join channels with a topic:
-let channel = socket.channel("rooms:nippo", {})
-channel.join()
-  .receive("ok", resp => { console.log("Joined successfully", resp) })
-  .receive("error", resp => { console.log("Unable to join", resp) })
+    this.channel.join()
+      .receive("ok", resp => { console.log("Joined successfully", resp) })
+      .receive("error", resp => { console.log("Unable to join", resp) })
+  }
 
-$('#submit-button').on('click', () => {
-  let name = $('input[name=nickname]').val();
-  let body = $('textarea[name=body]').val();
+  onNewNippo(callback) {
+    this.channel.on("nippo:new", callback);
+  }
 
-  channel.push("nippo:create", {name, body})
-    .receive("ok", resp => { console.log("nippo created", resp) });
-});
+  push(name, body) {
+    this.channel.push("nippo:create", {name, body}).receive("ok", resp => {});
+  }
+}
 
-let synthes = new SpeechSynthesisUtterance();
-synthes.lang = "ja-JP"
+class NippoSpeaker {
+  constructor() {
+    this.synthes = new SpeechSynthesisUtterance({lang: "ja-JP"});
+  }
 
-channel.on("nippo:new", message => {
-  let {name, body} = message;
+  speak(name, body) {
+    let text = `${name}さんの日報です。${body}`;
 
-  let text = `${name}さんの日報です。${body}`;
+    this.synthes.text = text;
+    speechSynthesis.speak(this.synthes);
+  }
+}
 
-  synthes.text = text;
-  speechSynthesis.speak( synthes );
-})
+let App = {
+  controller: function() {
+    this.nippoChannel = new NippoChannel();
+    this.nippoSpeaker = new NippoSpeaker();
+
+    this.nippoChannel.onNewNippo(message => {
+      let {name, body} = message;
+      this.nippoSpeaker.speak(name, body);
+    });
+
+    this.name = m.prop("");
+    this.body = m.prop("");
+
+    this.submit = () => {
+      this.nippoChannel.push(this.name, this.body);
+    };
+  },
+
+  view: function(ctrl) {
+    return [
+      m("div", [
+        m("input", {
+          onchange: m.withAttr("value", ctrl.name),
+          value: ctrl.name(),
+          placeholder: "あだ名"
+        })
+      ]),
+      m("div", [
+        m("textarea", {
+          onchange: m.withAttr("value", ctrl.body),
+          value: ctrl.body(),
+          placeholder: "今日はどんな1日でしたか",
+          style: `
+            height: 300px;
+          `
+        })
+      ]),
+      m("button", {onclick: ctrl.submit}, "ほぞん")
+    ]
+  }
+};
+
+m.mount(document.getElementById('app'), App);
