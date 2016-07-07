@@ -1,5 +1,5 @@
 defmodule Nip.RoomChannel do
-  use Phoenix.Channel
+  use Nip.Web, :channel
 
   def join("rooms:nippo", _message, socket) do
     {:ok, socket}
